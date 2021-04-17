@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import {
     KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity,
     View, TouchableWithoutFeedback, Keyboard
@@ -13,6 +13,7 @@ import CommonMessage from '../components/CommonMessage';
 const ChatScreen = ({ navigation, route }) => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
+    const scrollViewRef = useRef();
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -21,7 +22,7 @@ const ChatScreen = ({ navigation, route }) => {
             headerBackTitleVisible: false,
             headerTitle: () => (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Avatar rounded source={{ uri: messages[0]?.data?.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg/220px-Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg' }} />
+                    <Avatar rounded source={{ uri: messages[messages.length - 1]?.data?.photoURL || 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg/220px-Jeff_Bezos_at_Amazon_Spheres_Grand_Opening_in_Seattle_-_2018_%2839074799225%29_%28cropped%29.jpg' }} />
                     <Text style={{ color: '#fff', marginLeft: 10, fontWeight: '700' }}>
                         {route?.params?.chatName}
                     </Text>
@@ -46,7 +47,7 @@ const ChatScreen = ({ navigation, route }) => {
     }, [navigation, messages])
 
     useLayoutEffect(() => {
-        const unsubscribe = db.collection('chats').doc(route.params.id)
+        db.collection('chats').doc(route.params.id)
             .collection('messages').orderBy('timestamp', 'asc')
             .onSnapshot(snapshot => (
                 setMessages(
@@ -56,8 +57,6 @@ const ChatScreen = ({ navigation, route }) => {
                     }))
                 )
             ))
-
-        return () => unsubscribe;
     }, [route])
 
     const sendMessage = () => {
@@ -87,7 +86,9 @@ const ChatScreen = ({ navigation, route }) => {
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <>
-                        <ScrollView contentContainerStyle={{ paddingTop: 15 }} >
+                        <ScrollView contentContainerStyle={{ paddingTop: 15 }} ref={scrollViewRef}
+                            onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
+                        >
                             {messages?.map(({ id, data }) => {
                                 const message = data.email === auth.currentUser.email;
                                 return (

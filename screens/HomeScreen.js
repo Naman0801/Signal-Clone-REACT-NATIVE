@@ -10,14 +10,12 @@ const HomeScreen = ({ navigation }) => {
     const [chats, setChats] = useState([]);
 
     useEffect(() => {
-        const unsubscribe = db.collection('chats').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        db.collection('chats').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
             setChats(snapshot.docs.map(doc => ({
                 id: doc.id,
                 data: doc.data(),
             })))
         })
-
-        return unsubscribe;
     }, [])
 
     useLayoutEffect(() => {
